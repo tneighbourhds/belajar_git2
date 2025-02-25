@@ -1,0 +1,40 @@
+import streamlit as st
+import paramiko
+
+def authenticate(ip, username, password):
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        client.connect(ip, username=username, password=password)
+        client.close()
+        return True
+    except Exception as e:
+        return False, str(e)
+
+def main():
+    st.set_page_config(page_title="Server Login", layout="centered")
+    st.title("🔐 Server Login")
+    
+    with st.form("login_form"):
+        ip = st.text_input("Server IP", value="10.201.0.77")
+        username = st.text_input("Username", value="root")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Login")
+    
+    if submitted:
+        success, error = authenticate(ip, username, password)
+        if success:
+            st.success("Login berhasil! Redirecting...")
+            st.session_state["logged_in"] = True
+            st.session_state["ip"] = ip
+            st.session_state["username"] = username
+            st.session_state["password"] = password
+            st.experimental_rerun()
+        else:
+            st.error(f"Login gagal: {error}")
+
+if __name__ == "__main__":
+    if "logged_in" not in st.session_state:
+        main()
+    else:
+        st.switch_page("dashboard.py")
